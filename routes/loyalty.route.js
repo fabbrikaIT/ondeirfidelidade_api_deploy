@@ -17,6 +17,7 @@ class LoyaltyRoutes extends base_routes_1.BaseRoute {
         this.router.post("/deactivate", this.controller.DeactivateLoyalty);
         this.router.put("/", this.controller.UpdateLoyalty);
         this.router.delete("/:id", this.controller.DeleteLoyalty);
+        this.router.post("/:qrHash/:userId", this.controller.ApplyLoyalty);
     }
 }
 exports.LoyaltyRoutes = LoyaltyRoutes;

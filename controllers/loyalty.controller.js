@@ -235,6 +235,9 @@ class LoyaltyController extends base_controller_1.BaseController {
                 }
             });
         };
+        this.ApplyLoyalty = (req, res) => {
+            res.json(serviceResult_model_1.ServiceResult.HandlerSucess());
+        };
     }
 }
 exports.LoyaltyController = LoyaltyController;

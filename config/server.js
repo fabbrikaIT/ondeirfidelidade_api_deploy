@@ -4,6 +4,8 @@ const express = require("express");
 const parser = require("body-parser");
 const framework = require("swt-framework");
 const expressValidator = require("express-validator");
+const swaggerUi = require("swagger-ui-express");
+const swaggerDocument = require("../docs/swagger.json");
 const index_route_1 = require("../routes/index.route");
 const traffic_control_1 = require("../shared/network/traffic-control");
 const owner_routes_1 = require("../routes/owner.routes");
@@ -54,6 +56,7 @@ class Server {
         const offersRoutes = new offers_routes_1.OffersRoutes();
         const reportsRoutes = new report_routes_1.ReportsRoutes();
         this.express.use("/", indexRoutes.router);
+        this.express.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
         this.express.use(this.apiVersion + "/auth", authRoutes.router);
         this.express.use(this.apiVersion + "/owner", ownerRoutes.router);
         this.express.use(this.apiVersion + "/loyalty", loyaltyRoutes.router);
