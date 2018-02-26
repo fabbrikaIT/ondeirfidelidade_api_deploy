@@ -24,12 +24,12 @@ class LoyaltyDAO extends baseDAO_1.BaseDAO {
         this.updateUsageQuery = "UPDATE LOYALTY_USAGE_TYPE SET ? WHERE ID = ?";
         this.changeStatusQuery = "UPDATE LOYALTY SET STATUS = ? WHERE ID = ?";
         this.getLoyaltyProgramQuery = `SELECT L.ID, L.REGISTER_DATE, L.DISCHARGE, L.CARD_LINK, P.POINTS_DATE, L.LOYALTY_ID, L.USER_ID
-                                                FROM LOYALTY_PROGRAMS L, LOYALTY_POINTS P
-                                                WHERE L.ID = P.PROGRAM_ID
-                                                  AND L.LOYALTY_ID = ?
-                                                  AND EXISTS (SELECT 1 FROM USERS U
-                                                               WHERE U.ID = L.USER_ID
-                                                                 AND U.ONDE_IR_ID = ?)`;
+                                                FROM LOYALTY_PROGRAMS L 
+                                                LEFT JOIN LOYALTY_POINTS P ON L.ID = P.PROGRAM_ID
+                                                WHERE L.LOYALTY_ID = ?
+                                                AND EXISTS (SELECT 1 FROM USERS U
+                                                            WHERE U.ID = L.USER_ID
+                                                                AND U.ONDE_IR_ID = ?)`;
         this.getLoyaltyProgramByIdQuery = `SELECT L.ID, L.REGISTER_DATE, L.DISCHARGE, L.CARD_LINK, P.POINTS_DATE, L.LOYALTY_ID, L.USER_ID
                                                 FROM LOYALTY_PROGRAMS L, LOYALTY_POINTS P
                                                 WHERE L.ID = P.PROGRAM_ID
@@ -38,6 +38,14 @@ class LoyaltyDAO extends baseDAO_1.BaseDAO {
         this.addLoyaltyProgramPointQuery = "INSERT INTO LOYALTY_POINTS SET ?";
         this.updateLoyaltyProgramQuery = "UPDATE LOYALTY_PROGRAMS SET ? WHERE ID = ?";
         this.clearLoyaltyProgramPointsQuery = "DELETE FROM LOYALTY_POINTS WHERE PROGRAM_ID = ?";
+        this.searchLoyaltyByCityQuery = `SELECT L.*, LU.* FROM LOYALTY L, LOYALTY_USAGE_TYPE LU
+                                                WHERE L.ID = LU.ID
+                                                AND STATUS = 2
+                                                AND START_DATE <= SYSDATE()
+                                                AND (END_DATE IS NULL OR END_DATE >= SYSDATE())
+                                                AND EXISTS (SELECT 1 FROM OWNER O
+                                                                        WHERE O.ID = L.OWNER_ID
+                                                                            AND O.ONDE_IR_CITY = ?)`;
         this.ListLoyalty = (ownerId, res, callback) => {
             this.connDb.Connect(connection => {
                 const query = connection.query(this.listByOwnerQuery, ownerId, (error, results) => {
@@ -76,6 +84,39 @@ class LoyaltyDAO extends baseDAO_1.BaseDAO {
                 });
             }, error => {
                 callback(res, error, null);
+            });
+        };
+        this.GetLoyalty = (id, res, callback) => {
+            this.connDb.Connect(connection => {
+                const query = connection.query(this.getLoyaltyQuery, id, (error, results) => {
+                    if (!error && results.length > 0) {
+                        let ownerItem = new loyalty_1.LoyaltyEntity();
+                        ownerItem.fromMySqlDbEntity(results[0]);
+                        ownerItem.usageType = loyaltyUsageType_1.LoyaltyUsageType.getInstance();
+                        ownerItem.usageType.fromMySqlDbEntity(results[0]);
+                        connection.query(this.getLoyaltyValidity, id, (err, result) => {
+                            if (!error && result.length > 0) {
+                                ownerItem.validity = result.map(item => {
+                                    let validity = loyaltyValidity_1.LoyaltyValidity.getInstance();
+                                    validity.fromMySqlDbEntity(item);
+                                    return validity;
+                                });
+                                connection.release();
+                                return callback(res, err, ownerItem);
+                            }
+                            else {
+                                connection.release();
+                                return callback(res, err, ownerItem);
+                            }
+                        });
+                    }
+                    else {
+                        connection.release();
+                        return callback(res, error, results);
+                    }
+                });
+            }, error => {
+                return callback(res, error, null);
             });
         };
         this.Create = (loyalty, callback) => {
@@ -198,9 +239,11 @@ class LoyaltyDAO extends baseDAO_1.BaseDAO {
                     const program = loyaltyProgram_1.LoyaltyProgramEntity.GetInstance();
                     program.fromMySqlDbEntity(results[0]);
                     results.forEach(element => {
-                        let point = loyaltyPoints_1.LoyaltyPointsEntity.GetInstance();
-                        point.fromMySqlDbEntity(element);
-                        program.Points.push(point);
+                        if (element.POINTS_DATE) {
+                            let point = loyaltyPoints_1.LoyaltyPointsEntity.GetInstance();
+                            point.fromMySqlDbEntity(element);
+                            program.Points.push(point);
+                        }
                     });
                     connection.release();
                     return callback(error, program);
@@ -269,39 +312,30 @@ class LoyaltyDAO extends baseDAO_1.BaseDAO {
                 callback(error, null);
             });
         };
-    }
-    GetLoyalty(id, res, callback) {
-        this.connDb.Connect(connection => {
-            const query = connection.query(this.getLoyaltyQuery, id, (error, results) => {
-                if (!error && results.length > 0) {
-                    let ownerItem = new loyalty_1.LoyaltyEntity();
-                    ownerItem.fromMySqlDbEntity(results[0]);
-                    ownerItem.usageType = loyaltyUsageType_1.LoyaltyUsageType.getInstance();
-                    ownerItem.usageType.fromMySqlDbEntity(results[0]);
-                    connection.query(this.getLoyaltyValidity, id, (err, result) => {
-                        if (!error && result.length > 0) {
-                            ownerItem.validity = result.map(item => {
-                                let validity = loyaltyValidity_1.LoyaltyValidity.getInstance();
-                                validity.fromMySqlDbEntity(item);
-                                return validity;
-                            });
-                            connection.release();
-                            return callback(res, err, ownerItem);
-                        }
-                        else {
-                            connection.release();
-                            return callback(res, err, ownerItem);
-                        }
-                    });
-                }
-                else {
-                    connection.release();
-                    return callback(res, error, results);
-                }
+        this.SearchLoyaltyByCity = (cityId, res, callback) => {
+            this.connDb.Connect(connection => {
+                connection.query(this.searchLoyaltyByCityQuery, cityId, (error, results) => {
+                    if (!error && results.length > 0) {
+                        let list;
+                        list = results.map(item => {
+                            let loyaltyItem = new loyalty_1.LoyaltyEntity();
+                            loyaltyItem.fromMySqlDbEntity(item);
+                            loyaltyItem.usageType = loyaltyUsageType_1.LoyaltyUsageType.getInstance();
+                            loyaltyItem.usageType.fromMySqlDbEntity(item);
+                            return loyaltyItem;
+                        });
+                        connection.release();
+                        return callback(res, error, list);
+                    }
+                    else {
+                        connection.release();
+                        return callback(res, error, null);
+                    }
+                });
+            }, error => {
+                return callback(res, error, null);
             });
-        }, error => {
-            return callback(res, error, null);
-        });
+        };
     }
     GetLoyaltyByHash(qrHash, callback) {
         this.connDb.Connect(connection => {

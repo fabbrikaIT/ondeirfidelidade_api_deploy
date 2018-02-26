@@ -313,6 +313,15 @@ class LoyaltyController extends base_controller_1.BaseController {
                 });
             });
         };
+        this.SearchLoyaltyByCity = (req, res) => {
+            req.checkParams("cityId").isNumeric();
+            const errors = req.validationErrors();
+            if (errors) {
+                return res.json(loyaltyErrors_1.LoyaltyErrorsProvider.GetErrorDetails(loyaltyErrors_1.ELoyaltyErrors.InvalidOwnerId, errors));
+            }
+            const cityId = req.params["cityId"];
+            this.dataAccess.SearchLoyaltyByCity(cityId, res, this.processDefaultResult);
+        };
         this.ValidateProgramIsAvaliable = (loyalty, userId, res) => {
             let today = new Date();
             if (loyalty.status !== loyalty_1.ELoyaltyStatus.Active) {

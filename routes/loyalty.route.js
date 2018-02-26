@@ -9,6 +9,7 @@ class LoyaltyRoutes extends base_routes_1.BaseRoute {
         this.buildRoutes();
     }
     buildRoutes() {
+        this.router.get("/search/:cityId", this.controller.SearchLoyaltyByCity);
         this.router.get("/:id", this.controller.GetLoyalty);
         this.router.get("/list/:owner", this.controller.ListLoyalty);
         this.router.get("/list/:owner/:status", this.controller.ListLoyaltyStatus);

@@ -833,6 +833,31 @@
         }
       }
     },
+    "/loyalty/search/{cityId}": {
+      "get": {
+        "tags": ["Loyalty"],
+        "summary": "Busca os programas de fidelidade ativos em uma cidade",
+        "description": "Retorna a lista de programas de fidelidade ativos na cidade",
+        "parameters": [
+          {
+            "name": "cityId",
+            "in": "path",
+            "description": "Id da cidade no Onde Ir",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/ListLoyaltyResponse"
+          },
+          "422": {
+            "$ref": "#/responses/Error"
+          }
+        }
+      }
+    },
     "/offers": {
       "post": {
         "description": "Retorna se a oferta foi criado com sucesso",
