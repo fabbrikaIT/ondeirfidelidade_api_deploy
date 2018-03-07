@@ -13,6 +13,7 @@ var EOffersErrors;
     EOffersErrors[EOffersErrors["InvalidOfferId"] = 7] = "InvalidOfferId";
     EOffersErrors[EOffersErrors["HasValidCounpons"] = 8] = "HasValidCounpons";
     EOffersErrors[EOffersErrors["OfferNotFound"] = 9] = "OfferNotFound";
+    EOffersErrors[EOffersErrors["CouponAlredyExists"] = 10] = "CouponAlredyExists";
 })(EOffersErrors = exports.EOffersErrors || (exports.EOffersErrors = {}));
 class OffersErrorsProvider {
     static GetError(error) {
@@ -54,6 +55,10 @@ class OffersErrorsProvider {
             case EOffersErrors.OfferNotFound:
                 errorResult.ErrorCode = "OFF009";
                 errorResult.ErrorMessage = "A Oferta informada não foi encontrada.";
+                break;
+            case EOffersErrors.CouponAlredyExists:
+                errorResult.ErrorCode = "OFF010";
+                errorResult.ErrorMessage = "Já foi gerado um cupom para esta oferta anteriormente.";
                 break;
             default:
                 break;

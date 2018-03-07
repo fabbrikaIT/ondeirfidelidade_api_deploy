@@ -46,6 +46,14 @@ class LoyaltyDAO extends baseDAO_1.BaseDAO {
                                                 AND EXISTS (SELECT 1 FROM OWNER O
                                                                         WHERE O.ID = L.OWNER_ID
                                                                             AND O.ONDE_IR_CITY = ?)`;
+        this.listUserLoyaltyQuery = `SELECT LP.ID AS PROGRAM_ID,L.ID, L.NAME, L.START_DATE, L.END_DATE, L.TYPE, L.DAY_LIMIT, L.USAGE_LIMIT, L.QR_HASH,
+                                                    LU.USAGE_GOAL, LU.USAGE_REWARD
+                                                FROM LOYALTY_PROGRAMS LP, LOYALTY L, LOYALTY_USAGE_TYPE LU
+                                                WHERE LP.LOYALTY_ID = L.ID
+                                                AND L.ID = LU.ID
+                                                AND EXISTS (SELECT 1 FROM USERS U
+                                                            WHERE U.ID = LP.USER_ID
+                                                            AND U.ONDE_IR_ID = ?)`;
         this.ListLoyalty = (ownerId, res, callback) => {
             this.connDb.Connect(connection => {
                 const query = connection.query(this.listByOwnerQuery, ownerId, (error, results) => {
@@ -315,6 +323,30 @@ class LoyaltyDAO extends baseDAO_1.BaseDAO {
         this.SearchLoyaltyByCity = (cityId, res, callback) => {
             this.connDb.Connect(connection => {
                 connection.query(this.searchLoyaltyByCityQuery, cityId, (error, results) => {
+                    if (!error && results.length > 0) {
+                        let list;
+                        list = results.map(item => {
+                            let loyaltyItem = new loyalty_1.LoyaltyEntity();
+                            loyaltyItem.fromMySqlDbEntity(item);
+                            loyaltyItem.usageType = loyaltyUsageType_1.LoyaltyUsageType.getInstance();
+                            loyaltyItem.usageType.fromMySqlDbEntity(item);
+                            return loyaltyItem;
+                        });
+                        connection.release();
+                        return callback(res, error, list);
+                    }
+                    else {
+                        connection.release();
+                        return callback(res, error, null);
+                    }
+                });
+            }, error => {
+                return callback(res, error, null);
+            });
+        };
+        this.ListUserLoyalty = (userId, res, callback) => {
+            this.connDb.Connect(connection => {
+                connection.query(this.listUserLoyaltyQuery, userId, (error, results) => {
                     if (!error && results.length > 0) {
                         let list;
                         list = results.map(item => {

@@ -9,6 +9,10 @@ const offersErrors_1 = require("../config/errors/offersErrors");
 const offers_model_2 = require("../models/offers/offers.model");
 const offersDAO_1 = require("../dataaccess/offers/offersDAO");
 const serviceResult_model_1 = require("../models/serviceResult.model");
+const coupon_model_1 = require("../models/offers/coupon.model");
+const usersDAO_1 = require("../dataaccess/user/usersDAO");
+const ondeIrDAO_1 = require("../dataaccess/ondeir/ondeIrDAO");
+const userEntity_1 = require("../models/users/userEntity");
 class OffersController extends base_controller_1.BaseController {
     constructor() {
         super();
@@ -223,6 +227,123 @@ class OffersController extends base_controller_1.BaseController {
                     }
                     res.json(serviceResult_model_1.ServiceResult.HandlerSucess());
                 }
+            });
+        };
+        this.SearchOffersByCity = (req, res) => {
+            req.checkParams("cityId").isNumeric();
+            const errors = req.validationErrors();
+            if (errors) {
+                return res.json(offersErrors_1.OffersErrorsProvider.GetErrorDetails(offersErrors_1.EOffersErrors.InvalidOwnerId, errors));
+            }
+            const cityId = req.params["cityId"];
+            this.dataAccess.SearchOffersByCity(cityId, res, this.processDefaultResult);
+        };
+        this.createCoupon = (req, res) => {
+            req.checkBody("offerId").isNumeric();
+            req.checkBody("userId").isNumeric();
+            const errors = req.validationErrors();
+            if (errors) {
+                return res.json(offersErrors_1.OffersErrorsProvider.GetErrorDetails(offersErrors_1.EOffersErrors.InvalidOffersRequiredParams, errors));
+            }
+            const userId = req.body.userId;
+            const offerId = req.body.offerId;
+            this.dataAccess.GetUserCouponOffer(userId, offerId, (err, ret) => {
+                if (err) {
+                    return res.json(serviceResult_model_1.ServiceResult.HandlerError(err));
+                }
+                if (ret) {
+                    return res.json(offersErrors_1.OffersErrorsProvider.GetError(offersErrors_1.EOffersErrors.CouponAlredyExists));
+                }
+                this.dataAccess.GetOffer(offerId, res, (r, er, result) => {
+                    if (er) {
+                        return res.json(serviceResult_model_1.ServiceResult.HandlerError(er));
+                    }
+                    if (!result) {
+                        return res.json(offersErrors_1.OffersErrorsProvider.GetError(offersErrors_1.EOffersErrors.OfferNotFound));
+                    }
+                    this.SubscribeUserCoupon(userId, result, res);
+                });
+            });
+        };
+        this.ListUserCoupons = (req, res) => {
+            req.checkParams("id").isNumeric();
+            const errors = req.validationErrors();
+            if (errors) {
+                return res.json(offersErrors_1.OffersErrorsProvider.GetErrorDetails(offersErrors_1.EOffersErrors.InvalidOwnerId, errors));
+            }
+            const userId = req.params["id"];
+            this.dataAccess.ListUserCoupons(userId, res, this.processDefaultResult);
+        };
+        this.GetCoupon = (req, res) => {
+            req.checkParams("qrHash").notEmpty();
+            req.checkParams("userId").isNumeric();
+            const errors = req.validationErrors();
+            if (errors) {
+                return res.json(offersErrors_1.OffersErrorsProvider.GetErrorDetails(offersErrors_1.EOffersErrors.InvalidDiscountParams, errors));
+            }
+            const qrHash = req.params["qrHash"];
+            const userId = req.params["userId"];
+            this.dataAccess.GetUserCouponOfferHash(qrHash, userId, res, this.processDefaultResult);
+        };
+        this.UseCoupon = (req, res) => {
+            req.checkBody("offerId").isNumeric();
+            req.checkBody("userId").isNumeric();
+            const errors = req.validationErrors();
+            if (errors) {
+                return res.json(offersErrors_1.OffersErrorsProvider.GetErrorDetails(offersErrors_1.EOffersErrors.InvalidOffersRequiredParams, errors));
+            }
+            const userId = req.body.userId;
+            const offerId = req.body.offerId;
+            this.dataAccess.GetUserCouponOffer(userId, offerId, (err, ret) => {
+                if (err) {
+                    return res.json(serviceResult_model_1.ServiceResult.HandlerError(err));
+                }
+                if (!ret || ret.length === 0) {
+                    return res.json(offersErrors_1.OffersErrorsProvider.GetError(offersErrors_1.EOffersErrors.OfferNotFound));
+                }
+                ret[0].isValid = true;
+                this.dataAccess.UseCoupon(ret[0], res, this.processDefaultResult);
+            });
+        };
+        this.SubscribeUserCoupon = (userId, offer, res) => {
+            const userDA = new usersDAO_1.UsersDAO();
+            userDA.GetUserByOndeIr(userId, res, (r, err, result) => {
+                if (err) {
+                    return res.json(serviceResult_model_1.ServiceResult.HandlerError(err));
+                }
+                if (result) {
+                    const coupon = coupon_model_1.CouponEntity.GetInstance();
+                    coupon.userId = result.Id;
+                    coupon.offerId = offer.id;
+                    coupon.isValid = false;
+                    coupon.couponLink = `http://ondeircidades.com.br/fidelidade/#/coupon/${offer.qrHash}/${result.Id}`;
+                    this.dataAccess.CreateCoupon(coupon, (e, resp) => {
+                        if (e) {
+                            return res.json(serviceResult_model_1.ServiceResult.HandlerError(e));
+                        }
+                        return res.json(serviceResult_model_1.ServiceResult.HandlerSucess());
+                    });
+                }
+                else {
+                    return this.RegisterNewUser(offer, userId, res);
+                }
+            });
+        };
+        this.RegisterNewUser = (offer, userId, res) => {
+            const userDA = new usersDAO_1.UsersDAO();
+            const ondeIrDA = new ondeIrDAO_1.OndeIrDAO();
+            let user = userEntity_1.UserEntity.GetInstance();
+            ondeIrDA.GetUser(userId, (err, ret) => {
+                if (err || !ret) {
+                    return res.json(serviceResult_model_1.ServiceResult.HandlerError(err));
+                }
+                user = ret;
+                userDA.Create(user, (err, result) => {
+                    if (err) {
+                        return res.json(serviceResult_model_1.ServiceResult.HandlerError(err));
+                    }
+                    this.SubscribeUserCoupon(userId, offer, res);
+                });
             });
         };
     }

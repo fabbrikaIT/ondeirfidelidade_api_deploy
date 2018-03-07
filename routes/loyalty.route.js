@@ -11,6 +11,7 @@ class LoyaltyRoutes extends base_routes_1.BaseRoute {
     buildRoutes() {
         this.router.get("/search/:cityId", this.controller.SearchLoyaltyByCity);
         this.router.get("/:id", this.controller.GetLoyalty);
+        this.router.get("/user/:id", this.controller.ListUserLoyalty);
         this.router.get("/list/:owner", this.controller.ListLoyalty);
         this.router.get("/list/:owner/:status", this.controller.ListLoyaltyStatus);
         this.router.post("/", this.controller.CreateLoyalty);

@@ -12,6 +12,14 @@ var ELoyaltyErrors;
     ELoyaltyErrors[ELoyaltyErrors["NotImplementedLoyaltyType"] = 6] = "NotImplementedLoyaltyType";
     ELoyaltyErrors[ELoyaltyErrors["ProgramWithParticipants"] = 7] = "ProgramWithParticipants";
     ELoyaltyErrors[ELoyaltyErrors["LoyaltyNotFound"] = 8] = "LoyaltyNotFound";
+    ELoyaltyErrors[ELoyaltyErrors["LoyaltyNotActive"] = 9] = "LoyaltyNotActive";
+    ELoyaltyErrors[ELoyaltyErrors["LoyaltyOutOfDate"] = 10] = "LoyaltyOutOfDate";
+    ELoyaltyErrors[ELoyaltyErrors["LoyaltyOutValidity"] = 11] = "LoyaltyOutValidity";
+    ELoyaltyErrors[ELoyaltyErrors["LoyaltyDayLimitExceeded"] = 12] = "LoyaltyDayLimitExceeded";
+    ELoyaltyErrors[ELoyaltyErrors["LoyaltyUsageWait"] = 13] = "LoyaltyUsageWait";
+    ELoyaltyErrors[ELoyaltyErrors["LoyaltyPointsGoal"] = 14] = "LoyaltyPointsGoal";
+    ELoyaltyErrors[ELoyaltyErrors["LoyaltyProgramNotFound"] = 15] = "LoyaltyProgramNotFound";
+    ELoyaltyErrors[ELoyaltyErrors["LoyaltyNotPointsGoal"] = 16] = "LoyaltyNotPointsGoal";
 })(ELoyaltyErrors = exports.ELoyaltyErrors || (exports.ELoyaltyErrors = {}));
 class LoyaltyErrorsProvider {
     static GetError(error) {
@@ -49,6 +57,38 @@ class LoyaltyErrorsProvider {
             case ELoyaltyErrors.LoyaltyNotFound:
                 errorResult.ErrorCode = "LYT008";
                 errorResult.ErrorMessage = "O programa de fidelidade não foi encontrado.";
+                break;
+            case ELoyaltyErrors.LoyaltyNotActive:
+                errorResult.ErrorCode = "LYT009";
+                errorResult.ErrorMessage = "O programa de fidelidade não está ativo.";
+                break;
+            case ELoyaltyErrors.LoyaltyOutOfDate:
+                errorResult.ErrorCode = "LYT010";
+                errorResult.ErrorMessage = "Não é possível pontuar no programa de fidelidade na data e hora atuais.";
+                break;
+            case ELoyaltyErrors.LoyaltyOutValidity:
+                errorResult.ErrorCode = "LYT011";
+                errorResult.ErrorMessage = "O programa de fidelidade não está vigênte neste momento, confira os dias e horários para uso.";
+                break;
+            case ELoyaltyErrors.LoyaltyDayLimitExceeded:
+                errorResult.ErrorCode = "LYT012";
+                errorResult.ErrorMessage = "Limite do uso diário do programa excedido.";
+                break;
+            case ELoyaltyErrors.LoyaltyUsageWait:
+                errorResult.ErrorCode = "LYT013";
+                errorResult.ErrorMessage = "Tempo de espera desde última utilização não respeitado.";
+                break;
+            case ELoyaltyErrors.LoyaltyPointsGoal:
+                errorResult.ErrorCode = "LYT014";
+                errorResult.ErrorMessage = "Número de pontos para resgate alcançado, mostre o cartão no local para retirar sua recompensa.";
+                break;
+            case ELoyaltyErrors.LoyaltyProgramNotFound:
+                errorResult.ErrorCode = "LYT015";
+                errorResult.ErrorMessage = "Programa de fidelidade não encontrado.";
+                break;
+            case ELoyaltyErrors.LoyaltyNotPointsGoal:
+                errorResult.ErrorCode = "LYT016";
+                errorResult.ErrorMessage = "Pontuação necessária para resgate ainda não alcançada.";
                 break;
             default:
                 break;
