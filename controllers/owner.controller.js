@@ -15,7 +15,15 @@ class OwnerController extends base_controller_1.BaseController {
         super();
         this.dataAccess = new ownerDAO_1.OwnerDAO();
         this.listOwners = (req, res) => {
-            this.dataAccess.ListOwners(res, this.processDefaultResult);
+            req.checkParams("cityId").isNumeric();
+            const errors = req.validationErrors();
+            if (errors) {
+                this.dataAccess.ListOwners(res, this.processDefaultResult);
+            }
+            else {
+                const cityId = req.params["cityId"];
+                this.dataAccess.ListCityOwners(cityId, res, this.processDefaultResult);
+            }
         };
         this.getOwner = (req, res) => {
             req.checkParams("id").isNumeric();

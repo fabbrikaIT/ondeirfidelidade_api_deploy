@@ -11,6 +11,7 @@ class AuthRoutes extends base_routes_1.BaseRoute {
     buildRoutes() {
         this.router.post("/", this.controller.OwnerLogin);
         this.router.post("/user", this.controller.UserLogin);
+        this.router.get("/ondeiruser/:userid", this.controller.OndeIrUser);
     }
 }
 exports.AuthRoutes = AuthRoutes;

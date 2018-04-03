@@ -7,6 +7,7 @@ class OwnerDAO extends baseDAO_1.BaseDAO {
         super();
         this.insertQuery = "INSERT INTO OWNER SET ?";
         this.listQuery = "SELECT * FROM OWNER";
+        this.listCityQuery = "SELECT * FROM OWNER WHERE ONDE_IR_CITY = ?";
         this.getOwnerQuery = "SELECT * FROM OWNER WHERE ID = ?";
         this.getOwnerByEmailQuery = "SELECT * FROM OWNER WHERE EMAIL = ?";
         this.deleteOwnerQuery = "DELETE FROM OWNER WHERE ID = ?";
@@ -15,6 +16,24 @@ class OwnerDAO extends baseDAO_1.BaseDAO {
         this.ListOwners = (res, callback) => {
             this.connDb.Connect(connection => {
                 const query = connection.query(this.listQuery, (error, results) => {
+                    if (!error) {
+                        let list;
+                        list = results.map(item => {
+                            let ownerItem = new ownerEntity_1.OwnerEntity();
+                            ownerItem.fromMySqlDbEntity(item);
+                            return ownerItem;
+                        });
+                        return callback(res, error, list);
+                    }
+                    callback(res, error, results);
+                });
+            }, error => {
+                callback(res, error, null);
+            });
+        };
+        this.ListCityOwners = (city, res, callback) => {
+            this.connDb.Connect(connection => {
+                const query = connection.query(this.listCityQuery, [city], (error, results) => {
                     if (!error) {
                         let list;
                         list = results.map(item => {

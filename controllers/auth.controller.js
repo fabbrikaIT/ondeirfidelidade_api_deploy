@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const ondeIrDAO_1 = require("./../dataaccess/ondeir/ondeIrDAO");
 const authEntity_1 = require("./../models/auth/authEntity");
 const serviceResult_model_1 = require("./../models/serviceResult.model");
 const authErrors_1 = require("./../config/errors/authErrors");
@@ -49,6 +50,18 @@ class AuthController extends base_controller_1.BaseController {
         this.UserLogin = (req, res) => {
             const adminUser = req.body;
             if (adminUser && adminUser.user !== "" && adminUser.password !== "") {
+            }
+            else {
+                res.json(authErrors_1.AuthErrorsProvider.GetError(authErrors_1.EAuthErrors.InvalidUserOrPassword));
+            }
+        };
+        this.OndeIrUser = (req, res) => {
+            const userid = req.params["userid"];
+            if (userid > 0) {
+                const dataAccess = new ondeIrDAO_1.OndeIrDAO();
+                dataAccess.GetUser(userid, (err, ret) => {
+                    res.json(ret);
+                });
             }
             else {
                 res.json(authErrors_1.AuthErrorsProvider.GetError(authErrors_1.EAuthErrors.InvalidUserOrPassword));
