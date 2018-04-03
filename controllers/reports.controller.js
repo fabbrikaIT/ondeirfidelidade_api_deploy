@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const serviceResult_model_1 = require("../models/serviceResult.model");
 const base_controller_1 = require("./base.controller");
 const genericErrors_1 = require("../config/errors/genericErrors");
 const reportsDAO_1 = require("../dataaccess/reports/reportsDAO");
@@ -13,7 +14,7 @@ class ReportsController extends base_controller_1.BaseController {
                 return this.dataAccess.GetLoyaltyNumber(ownerId, res, this.processDefaultResult);
             }
             else {
-                return;
+                return res.json(serviceResult_model_1.ServiceResult.HandlerError("Owner Not Found"));
             }
         };
         this.GetOffersNumber = (req, res) => {
@@ -22,12 +23,26 @@ class ReportsController extends base_controller_1.BaseController {
                 return this.dataAccess.GetOffersNumber(ownerId, res, this.processDefaultResult);
             }
             else {
-                return;
+                return res.json(serviceResult_model_1.ServiceResult.HandlerError("Owner Not Found"));
             }
         };
         this.GetClientsNumber = (req, res) => {
+            const ownerId = this.GetOwnerId(req, res);
+            if (ownerId >= 0) {
+                return this.dataAccess.GetProgramsNumber(ownerId, res, this.processDefaultResult);
+            }
+            else {
+                return res.json(serviceResult_model_1.ServiceResult.HandlerError("Owner Not Found"));
+            }
         };
         this.GetCouponsNumber = (req, res) => {
+            const ownerId = this.GetOwnerId(req, res);
+            if (ownerId >= 0) {
+                return this.dataAccess.GetCouponsNumber(ownerId, res, this.processDefaultResult);
+            }
+            else {
+                return res.json(serviceResult_model_1.ServiceResult.HandlerError("Owner Not Found"));
+            }
         };
         this.GetOwnerId = (req, res) => {
             req.checkParams("ownerId").isNumeric();
